@@ -6,7 +6,7 @@ A simple desktop app for funeral home staff to import, validate, convert, trim, 
 
 - Drag-and-drop or browse to import local video files (MP4, MOV, M4V, AVI, MKV, WEBM)
 - Paste direct video links (Dropbox, Google Drive, direct file URLs)
-- YouTube/Vimeo/Facebook/Instagram/TikTok are intentionally **not** imported — staff are prompted to ask the family for the original file
+- Import from YouTube, Vimeo, Facebook, Instagram, and TikTok via yt-dlp, gated behind a one-time ownership confirmation (staff must check a box affirming the family owns the video). yt-dlp binary is auto-downloaded to the app's user-data folder on first use.
 - Read video metadata (duration, resolution, codec, size, rotation) with ffprobe
 - Convert to tribute-ready MP4:
   - H.264 video, AAC audio
@@ -55,4 +55,6 @@ resources/     Installer icons
 
 ## Notes on link import
 
-This app does **not** attempt to bypass DRM, scrape, or use unofficial APIs to pull videos from streaming platforms. Only direct file URLs and explicit share-to-download links (Dropbox `?dl=1`, Google Drive `uc?export=download`) are supported. Anything else triggers the "please ask the family for the original file" message.
+Direct file URLs and share-to-download links (Dropbox `?dl=1`, Google Drive `uc?export=download`) are imported with a plain HTTPS GET.
+
+Streaming-platform links (YouTube, Vimeo, Facebook, Instagram, TikTok) are imported with [yt-dlp](https://github.com/yt-dlp/yt-dlp). To enable this, staff must tick the ownership-confirmation checkbox in the app, affirming the family owns or has rights to the video. The yt-dlp binary is downloaded automatically on first use to `%APPDATA%\Tribute Media Importer\bin\yt-dlp.exe` — no manual install required.

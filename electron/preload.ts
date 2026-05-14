@@ -25,6 +25,13 @@ const api = {
   checkLink: (url: string): Promise<LinkCheckResult> => ipcRenderer.invoke('link:check', url),
   downloadLink: (url: string, suggestedFilename: string): Promise<string> =>
     ipcRenderer.invoke('link:download', url, suggestedFilename),
+  downloadPlatformLink: (url: string): Promise<string> =>
+    ipcRenderer.invoke('link:downloadPlatform', url),
+  onPlatformProgress: (cb: (p: { percent: number; status: string }) => void) => {
+    const listener = (_: unknown, p: { percent: number; status: string }) => cb(p);
+    ipcRenderer.on('link:platformProgress', listener);
+    return () => ipcRenderer.removeListener('link:platformProgress', listener);
+  },
 
   onLog: (cb: (line: string) => void) => {
     const listener = (_: unknown, line: string) => cb(line);

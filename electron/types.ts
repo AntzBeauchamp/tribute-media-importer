@@ -30,11 +30,17 @@ export interface ConvertProgress {
 export interface AppSettings {
   outputFolder: string | null;
   deceasedName: string;
+  acknowledgedOwnership: boolean;
 }
+
+export type LinkKind = 'direct' | 'platform' | 'blocked';
 
 export interface LinkCheckResult {
   ok: boolean;
+  kind: LinkKind;
   reason: string;
   directUrl?: string;
   suggestedFilename?: string;
+  platform?: string;
+  requiresOwnershipAck?: boolean;
 }

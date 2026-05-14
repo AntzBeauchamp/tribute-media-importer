@@ -71,7 +71,7 @@ app.whenReady().then(() => {
   registerSettingsIpc(ipcMain);
   registerProbeIpc(ipcMain);
   registerConvertIpc(ipcMain, () => mainWindow);
-  registerLinkIpc(ipcMain);
+  registerLinkIpc(ipcMain, () => mainWindow);
 
   createWindow();
 

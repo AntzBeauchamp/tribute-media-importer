@@ -1,4 +1,4 @@
-import type { IpcMain } from 'electron';
+import type { BrowserWindow, IpcMain } from 'electron';
 import { app } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -6,33 +6,40 @@ import * as https from 'https';
 import * as http from 'http';
 import { URL } from 'url';
 import { logger } from '../services/logger';
+import { downloadWithYtDlp } from '../services/ytdlp';
+import { getSettings } from '../services/settingsStore';
 import type { LinkCheckResult } from '../types';
 
-const BLOCKED_HOSTS = [
-  'youtube.com', 'youtu.be', 'www.youtube.com', 'm.youtube.com',
-  'vimeo.com', 'www.vimeo.com',
-  'facebook.com', 'www.facebook.com', 'fb.watch',
-  'instagram.com', 'www.instagram.com',
-  'tiktok.com', 'www.tiktok.com'
+const PLATFORM_HOSTS: Array<{ match: RegExp; name: string }> = [
+  { match: /(^|\.)youtube\.com$/i, name: 'YouTube' },
+  { match: /(^|\.)youtu\.be$/i, name: 'YouTube' },
+  { match: /(^|\.)vimeo\.com$/i, name: 'Vimeo' },
+  { match: /(^|\.)facebook\.com$/i, name: 'Facebook' },
+  { match: /(^|\.)fb\.watch$/i, name: 'Facebook' },
+  { match: /(^|\.)instagram\.com$/i, name: 'Instagram' },
+  { match: /(^|\.)tiktok\.com$/i, name: 'TikTok' }
 ];
 
 const ALLOWED_MIME_PREFIXES = ['video/', 'application/octet-stream'];
+
+function detectPlatform(host: string): string | null {
+  for (const p of PLATFORM_HOSTS) {
+    if (p.match.test(host)) return p.name;
+  }
+  return null;
+}
 
 function normalizeShareUrl(input: string): string {
   try {
     const u = new URL(input);
     const host = u.hostname.toLowerCase();
-    // Dropbox: switch dl=0 to dl=1 for direct download
     if (host.includes('dropbox.com')) {
       u.searchParams.set('dl', '1');
       return u.toString();
     }
-    // Google Drive: convert /file/d/<id>/view to uc?export=download&id=<id>
     if (host.includes('drive.google.com')) {
       const m = u.pathname.match(/\/file\/d\/([^/]+)/);
-      if (m) {
-        return `https://drive.google.com/uc?export=download&id=${m[1]}`;
-      }
+      if (m) return `https://drive.google.com/uc?export=download&id=${m[1]}`;
     }
     return input;
   } catch {
@@ -92,15 +99,25 @@ function getRequest(urlStr: string, dest: fs.WriteStream, redirectsLeft = 5): Pr
   });
 }
 
-export function registerLinkIpc(ipcMain: IpcMain) {
+function tempDir(): string {
+  const d = path.join(app.getPath('temp'), 'tribute-media-importer');
+  fs.mkdirSync(d, { recursive: true });
+  return d;
+}
+
+export function registerLinkIpc(ipcMain: IpcMain, getWindow: () => BrowserWindow | null) {
   ipcMain.handle('link:check', async (_e, url: string): Promise<LinkCheckResult> => {
     try {
       const parsed = new URL(url);
       const host = parsed.hostname.toLowerCase();
-      if (BLOCKED_HOSTS.some((h) => host === h || host.endsWith('.' + h))) {
+      const platform = detectPlatform(host);
+      if (platform) {
         return {
-          ok: false,
-          reason: 'This video cannot be imported directly. Please ask the family to upload or send the original video file.'
+          ok: true,
+          kind: 'platform',
+          platform,
+          reason: `${platform} link detected. The family must own this video; download uses yt-dlp.`,
+          requiresOwnershipAck: true
         };
       }
 
@@ -113,32 +130,43 @@ export function registerLinkIpc(ipcMain: IpcMain) {
       if (!looksLikeFile) {
         return {
           ok: false,
-          reason: 'This video cannot be imported directly. Please ask the family to upload or send the original video file.'
+          kind: 'blocked',
+          reason: 'This link does not appear to be a direct video file. Please ask the family to upload or send the original video file.'
         };
       }
 
-      // Suggest filename from URL or content-disposition
       let suggested = path.basename(parsed.pathname) || 'downloaded-video';
       const cdMatch = cd.match(/filename\*?=([^;]+)/);
       if (cdMatch) suggested = decodeURIComponent(cdMatch[1].replace(/utf-8''/i, '').replace(/"/g, '').trim());
       if (!/\.(mp4|mov|m4v|avi|mkv|webm)$/i.test(suggested)) suggested += '.mp4';
 
-      return { ok: true, reason: 'Direct download available.', directUrl, suggestedFilename: suggested };
+      return { ok: true, kind: 'direct', reason: 'Direct download available.', directUrl, suggestedFilename: suggested };
     } catch (e: any) {
       logger.warn('link:check failed ' + e.message);
-      return { ok: false, reason: 'Could not verify this link. Please ask the family to upload or send the original video file.' };
+      return { ok: false, kind: 'blocked', reason: 'Could not verify this link. Please ask the family to upload or send the original video file.' };
     }
   });
 
   ipcMain.handle('link:download', async (_e, url: string, suggestedFilename: string): Promise<string> => {
-    const tempDir = path.join(app.getPath('temp'), 'tribute-media-importer');
-    fs.mkdirSync(tempDir, { recursive: true });
     const safeName = suggestedFilename.replace(/[\\/:*?"<>|]/g, '_');
-    const dest = path.join(tempDir, `${Date.now()}-${safeName}`);
+    const dest = path.join(tempDir(), `${Date.now()}-${safeName}`);
     const ws = fs.createWriteStream(dest);
-    logger.info(`Downloading link to ${dest}`);
+    logger.info(`Downloading direct link to ${dest}`);
     await getRequest(url, ws);
     logger.info(`Download complete: ${dest}`);
+    return dest;
+  });
+
+  ipcMain.handle('link:downloadPlatform', async (_e, url: string): Promise<string> => {
+    const settings = getSettings();
+    if (!settings.acknowledgedOwnership) {
+      throw new Error('Ownership acknowledgment is required before downloading from streaming platforms.');
+    }
+    logger.info(`yt-dlp download requested for ${url}`);
+    const dest = await downloadWithYtDlp(url, tempDir(), (p) => {
+      getWindow()?.webContents.send('link:platformProgress', p);
+    });
+    logger.info(`yt-dlp download complete: ${dest}`);
     return dest;
   });
 }

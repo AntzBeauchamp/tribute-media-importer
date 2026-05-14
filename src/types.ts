@@ -30,13 +30,19 @@ export interface ConvertProgress {
 export interface AppSettings {
   outputFolder: string | null;
   deceasedName: string;
+  acknowledgedOwnership: boolean;
 }
+
+export type LinkKind = 'direct' | 'platform' | 'blocked';
 
 export interface LinkCheckResult {
   ok: boolean;
+  kind: LinkKind;
   reason: string;
   directUrl?: string;
   suggestedFilename?: string;
+  platform?: string;
+  requiresOwnershipAck?: boolean;
 }
 
 export interface FileEntry {
@@ -63,6 +69,8 @@ declare global {
       setSettings: (patch: Partial<AppSettings>) => Promise<AppSettings>;
       checkLink: (url: string) => Promise<LinkCheckResult>;
       downloadLink: (url: string, suggestedFilename: string) => Promise<string>;
+      downloadPlatformLink: (url: string) => Promise<string>;
+      onPlatformProgress: (cb: (p: { percent: number; status: string }) => void) => () => void;
       onLog: (cb: (line: string) => void) => () => void;
     };
   }

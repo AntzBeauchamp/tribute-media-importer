@@ -115,7 +115,12 @@ export default function App() {
       <Header />
       <main className="flex-1 p-6 space-y-4 max-w-5xl w-full mx-auto">
         <DropZone onFiles={importPaths} />
-        <LinkInput onImported={(p) => importPaths([p])} onLog={append} />
+        <LinkInput
+          onImported={(p) => importPaths([p])}
+          onLog={append}
+          acknowledgedOwnership={settings.acknowledgedOwnership}
+          onAckChange={(v) => update({ acknowledgedOwnership: v })}
+        />
         <TrimFields
           start={trimStart}
           end={trimEnd}

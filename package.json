@@ -19,7 +19,8 @@
   "dependencies": {
     "electron-store": "8.2.0",
     "ffmpeg-static": "5.2.0",
-    "ffprobe-static": "3.1.0"
+    "ffprobe-static": "3.1.0",
+    "yt-dlp-wrap": "2.3.12"
   },
   "devDependencies": {
     "@types/node": "20.12.7",
@@ -58,7 +59,12 @@
     ],
     "win": {
       "target": [
-        { "target": "nsis", "arch": ["x64"] }
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
       ],
       "icon": "resources/icon.ico"
     },

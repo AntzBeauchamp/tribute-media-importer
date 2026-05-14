@@ -3,7 +3,8 @@ import type { AppSettings } from '../types';
 
 const defaults: AppSettings = {
   outputFolder: null,
-  deceasedName: ''
+  deceasedName: '',
+  acknowledgedOwnership: false
 };
 
 const store = new Store<AppSettings>({
@@ -14,7 +15,8 @@ const store = new Store<AppSettings>({
 export function getSettings(): AppSettings {
   return {
     outputFolder: store.get('outputFolder'),
-    deceasedName: store.get('deceasedName')
+    deceasedName: store.get('deceasedName'),
+    acknowledgedOwnership: store.get('acknowledgedOwnership')
   };
 }
 
