@@ -16,8 +16,8 @@ function createWindow() {
     height: 780,
     minWidth: 900,
     minHeight: 640,
-    backgroundColor: '#f5f7fb',
-    title: 'Tribute Media Importer',
+    backgroundColor: '#f4f7f3',
+    title: 'BF-Downloader',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,

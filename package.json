@@ -1,9 +1,9 @@
 {
-  "name": "tribute-media-importer",
+  "name": "bf-downloader",
   "version": "0.1.0",
-  "description": "Desktop app for funeral home staff to import, validate, convert, trim, and prepare videos for tribute slideshows.",
+  "description": "Desktop app to import, download, convert, and prepare media files.",
   "main": "dist-electron/main.js",
-  "author": "Tribute Media Importer",
+  "author": "BF-Downloader",
   "license": "UNLICENSED",
   "private": true,
   "scripts": {
@@ -15,9 +15,10 @@
     "build": "npm run build:renderer && npm run build:electron",
     "dist": "npm run build && electron-builder --win nsis",
     "lint": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.electron.json"
+  },
   "build": {
-    "appId": "com.tributemedia.importer",
-    "productName": "Tribute Media Importer",
+    "appId": "com.bf.downloader",
+    "productName": "BF-Downloader",
     "directories": {
       "buildResources": "resources",
       "output": "release"
@@ -44,37 +45,30 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Tribute Media Importer"
+      "shortcutName": "BF-Downloader"
     }
-  }
-    "files": [
-      "dist-electron/**/*",
-      "dist/**/*",
-      "package.json"
-    ],
-    "asar": true,
-    "asarUnpack": [
-      "node_modules/ffmpeg-static/**/*",
-      "node_modules/ffprobe-static/**/*"
-    ],
-    "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
-      "icon": "resources/icon.ico"
-    },
-    "nsis": {
-      "oneClick": false,
-      "perMachine": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "Tribute Media Importer"
-    }
+  },
+  "dependencies": {
+    "electron-store": "^8.2.0",
+    "ffmpeg-static": "^5.2.0",
+    "ffprobe-static": "^3.1.0",
+    "yt-dlp-wrap": "^2.3.12"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.19",
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "electron": "^31.1.0",
+    "electron-builder": "^24.13.3",
+    "postcss": "^8.4.38",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwindcss": "^3.4.4",
+    "typescript": "^5.5.2",
+    "vite": "^5.3.1",
+    "wait-on": "^7.2.0"
   }
 }

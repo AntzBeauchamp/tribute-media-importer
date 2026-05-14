@@ -19,7 +19,7 @@ export function FileList({ files, onRemove, onOpen }: Props) {
   return (
     <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
       <table className="w-full text-sm">
-        <thead className="bg-slate-50 text-slate-600 text-left">
+        <thead className="bg-warm-100 text-slate-600 text-left">
           <tr>
             <th className="px-3 py-2">File</th>
             <th className="px-3 py-2">Duration</th>

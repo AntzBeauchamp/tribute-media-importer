@@ -4,6 +4,7 @@ import * as path from 'path';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const YTDlpWrap = require('yt-dlp-wrap').default;
 import { logger } from './logger';
+import { getFfmpegPath } from './ffmpeg';
 
 let cachedWrapper: any = null;
 let initPromise: Promise<any> | null = null;
@@ -35,19 +36,25 @@ export interface YtDlpProgress {
   status: string;
 }
 
+const VIDEO_EXTS = ['.mp4', '.mkv', '.webm', '.m4v', '.mov', '.avi'];
+
 export async function downloadWithYtDlp(
   url: string,
   outputDir: string,
   onProgress?: (p: YtDlpProgress) => void
 ): Promise<string> {
   const wrap = await ensureBinary();
-  fs.mkdirSync(outputDir, { recursive: true });
-  const outputTemplate = path.join(outputDir, '%(title).80s-%(id)s.%(ext)s');
+
+  // Use a unique subdirectory per download so the fallback scan is unambiguous
+  const downloadDir = path.join(outputDir, `dl-${Date.now()}`);
+  fs.mkdirSync(downloadDir, { recursive: true });
+
+  const outputTemplate = path.join(downloadDir, '%(title).80s-%(id)s.%(ext)s');
 
   const args = [
     url,
-    '-f', 'bv*[ext=mp4]+ba[ext=m4a]/bv*+ba/b',
-    '--merge-output-format', 'mp4',
+    '-f', 'best[ext=mp4]/best[ext=webm]/best',
+    '--ffmpeg-location', getFfmpegPath(),
     '--no-playlist',
     '--no-warnings',
     '-o', outputTemplate
@@ -61,23 +68,24 @@ export async function downloadWithYtDlp(
     ev.on('progress', (p: any) => {
       if (onProgress) onProgress({ percent: p.percent || 0, status: 'downloading' });
     });
-    ev.on('ytDlpEvent', (eventType: string, eventData: string) => {
-      // Capture final merged filename if reported
-      const m = /Merging formats into "(.+?)"/.exec(eventData) || /\[download\] Destination: (.+)$/.exec(eventData);
+    ev.on('ytDlpEvent', (_eventType: string, eventData: string) => {
+      const m = /Merging formats into "(.+?)"/.exec(eventData)
+        || /\[Merger\] Merging formats into "(.+?)"/.exec(eventData)
+        || /\[download\] Destination: (.+)$/.exec(eventData);
       if (m) finalPath = m[1].trim();
       const done = /\[download\] (.+) has already been downloaded/.exec(eventData);
       if (done) finalPath = done[1].trim();
     });
     ev.on('error', (err: Error) => reject(err));
     ev.on('close', () => {
-      if (!finalPath) {
-        // Fallback: pick newest .mp4 in outputDir
+      if (!finalPath || !fs.existsSync(finalPath)) {
+        // Fallback: pick the newest video file in the unique download dir
         try {
-          const files = fs.readdirSync(outputDir)
-            .filter((f) => f.toLowerCase().endsWith('.mp4'))
-            .map((f) => ({ f, t: fs.statSync(path.join(outputDir, f)).mtimeMs }))
+          const files = fs.readdirSync(downloadDir)
+            .filter((f) => VIDEO_EXTS.some((ext) => f.toLowerCase().endsWith(ext)))
+            .map((f) => ({ f, t: fs.statSync(path.join(downloadDir, f)).mtimeMs }))
             .sort((a, b) => b.t - a.t);
-          if (files[0]) finalPath = path.join(outputDir, files[0].f);
+          if (files[0]) finalPath = path.join(downloadDir, files[0].f);
         } catch { /* ignore */ }
       }
       if (!finalPath || !fs.existsSync(finalPath)) {

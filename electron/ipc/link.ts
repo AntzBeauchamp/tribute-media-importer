@@ -100,7 +100,7 @@ function getRequest(urlStr: string, dest: fs.WriteStream, redirectsLeft = 5): Pr
 }
 
 function tempDir(): string {
-  const d = path.join(app.getPath('temp'), 'tribute-media-importer');
+  const d = path.join(app.getPath('temp'), 'bf-downloader');
   fs.mkdirSync(d, { recursive: true });
   return d;
 }

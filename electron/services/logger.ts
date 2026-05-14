@@ -9,7 +9,7 @@ class Logger {
   constructor() {
     const dir = app?.getPath ? app.getPath('userData') : process.cwd();
     try { fs.mkdirSync(dir, { recursive: true }); } catch { /* ignore */ }
-    this.logPath = path.join(dir, 'tribute-media-importer.log');
+    this.logPath = path.join(dir, 'bf-downloader.log');
   }
 
   subscribe(cb: (line: string) => void) {

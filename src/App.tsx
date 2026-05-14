@@ -123,7 +123,7 @@ export default function App() {
           <button
             onClick={convertAll}
             disabled={!canConvert}
-            className="rounded bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white px-5 py-2.5 text-sm font-medium"
+            className="rounded bg-brand-600 hover:bg-brand-700 disabled:bg-slate-300 text-white px-5 py-2.5 text-sm font-medium"
           >
             {running ? 'Converting…' : `Convert all to ${(settings.outputFormat || 'mp4').toUpperCase()}`}
           </button>
