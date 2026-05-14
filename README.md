@@ -19,7 +19,10 @@ A simple desktop app for funeral home staff to import, validate, convert, trim, 
 - Per-job progress, status, and plain-English error messages
 - Persistent log panel + log file under `%APPDATA%\Tribute Media Importer\`
 
+
 ## Requirements
+
+- **You must have a real `resources/icon.ico` (256×256, multi-resolution) for installer builds.**
 
 - Windows 10 or 11
 - Node.js 20+ (for development only)
@@ -33,7 +36,22 @@ npm run dev
 
 This launches Vite (port 5173) and Electron in development mode.
 
+
+
+
 ## Building a Windows installer
+
+1. Place a real `resources/icon.ico` (256×256, multi-resolution) in the resources folder.
+2. Run:
+
+**Before you build:**
+- Make sure `resources/icon.ico` exists and is a real 256×256 multi-resolution icon.
+- If you do not have one, you can use a temporary icon, but Windows will show a generic icon.
+
+**Important:**
+- Place a real `resources/icon.ico` (256×256, multi-resolution) before running `npm run dist`.
+- If you do not, the build will fail or the installer will have a generic icon.
+
 
 ```powershell
 npm run dist

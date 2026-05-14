@@ -11,12 +11,13 @@ const options: Array<{ value: OutputFormat; label: string; desc: string }> = [
 ];
 
 export function FormatSelector({ value, onChange }: Props) {
+  const current: OutputFormat = value === 'mp3' ? 'mp3' : 'mp4';
   return (
     <div className="bg-white border border-slate-200 rounded-lg p-4">
       <div className="text-sm font-medium text-slate-700 mb-2">Output format</div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         {options.map((opt) => {
-          const active = value === opt.value;
+          const active = current === opt.value;
           return (
             <button
               key={opt.value}

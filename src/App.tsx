@@ -125,7 +125,7 @@ export default function App() {
             disabled={!canConvert}
             className="rounded bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white px-5 py-2.5 text-sm font-medium"
           >
-            {running ? 'Converting…' : `Convert all to ${settings.outputFormat.toUpperCase()}`}
+            {running ? 'Converting…' : `Convert all to ${(settings.outputFormat || 'mp4').toUpperCase()}`}
           </button>
           <span className="text-xs text-slate-500">
             {files.filter((f) => f.status === 'complete').length} of {files.length} complete

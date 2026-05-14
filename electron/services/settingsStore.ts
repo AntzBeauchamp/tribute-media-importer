@@ -14,9 +14,9 @@ const store = new Store<AppSettings>({
 
 export function getSettings(): AppSettings {
   return {
-    outputFolder: store.get('outputFolder'),
-    acknowledgedOwnership: store.get('acknowledgedOwnership'),
-    outputFormat: store.get('outputFormat')
+    outputFolder: store.get('outputFolder') ?? defaults.outputFolder,
+    acknowledgedOwnership: store.get('acknowledgedOwnership') ?? defaults.acknowledgedOwnership,
+    outputFormat: store.get('outputFormat') ?? defaults.outputFormat
   };
 }
 
