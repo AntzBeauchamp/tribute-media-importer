@@ -3,8 +3,8 @@ import type { AppSettings } from '../types';
 
 const defaults: AppSettings = {
   outputFolder: null,
-  deceasedName: '',
-  acknowledgedOwnership: false
+  acknowledgedOwnership: false,
+  outputFormat: 'mp4'
 };
 
 const store = new Store<AppSettings>({
@@ -15,8 +15,8 @@ const store = new Store<AppSettings>({
 export function getSettings(): AppSettings {
   return {
     outputFolder: store.get('outputFolder'),
-    deceasedName: store.get('deceasedName'),
-    acknowledgedOwnership: store.get('acknowledgedOwnership')
+    acknowledgedOwnership: store.get('acknowledgedOwnership'),
+    outputFormat: store.get('outputFormat')
   };
 }
 

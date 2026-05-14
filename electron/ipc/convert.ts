@@ -25,13 +25,20 @@ function probeDuration(filePath: string): Promise<number> {
 }
 
 function buildArgs(opts: ConvertOptions, outputPath: string): string[] {
-  const args: string[] = ['-y', '-hide_banner'];
-  if (opts.trimStartSec && opts.trimStartSec > 0) {
-    args.push('-ss', opts.trimStartSec.toString());
-  }
-  args.push('-i', opts.inputPath);
-  if (opts.trimEndSec && opts.trimEndSec > (opts.trimStartSec || 0)) {
-    args.push('-to', opts.trimEndSec.toString());
+  const args: string[] = ['-y', '-hide_banner', '-i', opts.inputPath];
+
+  if (opts.format === 'mp3') {
+    args.push(
+      '-vn',
+      '-c:a', 'libmp3lame',
+      '-b:a', '192k',
+      '-ar', '44100',
+      '-ac', '2',
+      '-progress', 'pipe:1',
+      '-nostats',
+      outputPath
+    );
+    return args;
   }
 
   const vf = [
@@ -104,7 +111,7 @@ export function registerConvertIpc(ipcMain: IpcMain, getWindow: () => BrowserWin
           const last = match[match.length - 1];
           const us = parseInt(last.split('=')[1], 10);
           const sec = us / 1_000_000;
-          const span = (opts.trimEndSec || totalDuration) - (opts.trimStartSec || 0);
+          const span = totalDuration;
           const pct = Math.min(99, Math.max(0, (sec / Math.max(span, 0.001)) * 100));
           if (pct - lastPercent >= 1) {
             lastPercent = pct;

@@ -4,11 +4,10 @@ import { DropZone } from './components/DropZone';
 import { FileList } from './components/FileList';
 import { LinkInput } from './components/LinkInput';
 import { OutputFolderPicker } from './components/OutputFolderPicker';
-import { TrimFields } from './components/TrimFields';
+import { FormatSelector } from './components/FormatSelector';
 import { LogPanel } from './components/LogPanel';
 import { useSettings } from './hooks/useSettings';
 import { useLog } from './hooks/useLog';
-import { parseTime } from './lib/format';
 import { buildOutputFilename } from './lib/nameTemplate';
 import type { ConvertProgress, FileEntry } from './types';
 
@@ -16,10 +15,8 @@ export default function App() {
   const { settings, update, loaded } = useSettings();
   const { lines, append } = useLog();
   const [files, setFiles] = useState<FileEntry[]>([]);
-  const [trimStart, setTrimStart] = useState('');
-  const [trimEnd, setTrimEnd] = useState('');
   const [running, setRunning] = useState(false);
-  const [activeJobs, setActiveJobs] = useState<Record<string, string>>({}); // jobId -> fileId
+  const [activeJobs, setActiveJobs] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const off = window.api.onConvertProgress((p: ConvertProgress) => {
@@ -64,31 +61,22 @@ export default function App() {
       append('Please choose an output folder first.');
       return;
     }
-    const start = parseTime(trimStart);
-    const end = parseTime(trimEnd);
-    if (start !== undefined && end !== undefined && end <= start) {
-      append('Trim end must be greater than trim start.');
-      return;
-    }
 
     setRunning(true);
     const queue = files.filter((f) => f.status === 'queued' || f.status === 'failed');
     for (const file of queue) {
-      const filename = buildOutputFilename(settings.deceasedName, file.meta.filename);
+      const filename = buildOutputFilename(file.meta.filename, settings.outputFormat);
       try {
         append(`Converting ${file.meta.filename} -> ${filename}`);
-        // Mark as processing immediately
-        setFiles((prev) => prev.map((f) => f.id === file.id ? { ...f, status: 'processing', percent: 0, message: undefined } : f));
-        // Kick off conversion
-        const startedPromise = window.api.convert({
+        setFiles((prev) => prev.map((f) => f.id === file.id
+          ? { ...f, status: 'processing', percent: 0, message: undefined }
+          : f));
+        const { jobId, outputPath } = await window.api.convert({
           inputPath: file.meta.path,
           outputDir: settings.outputFolder!,
           outputFilename: filename,
-          trimStartSec: start,
-          trimEndSec: end
+          format: settings.outputFormat
         });
-        // Track jobId via progress events; we don't get jobId synchronously, so listen via wrapper
-        const { jobId, outputPath } = await startedPromise;
         setActiveJobs((m) => ({ ...m, [jobId]: file.id }));
         setFiles((prev) => prev.map((f) => f.id === file.id
           ? { ...f, status: 'complete', percent: 100, outputPath }
@@ -121,13 +109,9 @@ export default function App() {
           acknowledgedOwnership={settings.acknowledgedOwnership}
           onAckChange={(v) => update({ acknowledgedOwnership: v })}
         />
-        <TrimFields
-          start={trimStart}
-          end={trimEnd}
-          onStart={setTrimStart}
-          onEnd={setTrimEnd}
-          deceasedName={settings.deceasedName}
-          onDeceasedName={(v) => update({ deceasedName: v })}
+        <FormatSelector
+          value={settings.outputFormat}
+          onChange={(v) => update({ outputFormat: v })}
         />
         <OutputFolderPicker
           outputFolder={settings.outputFolder}
@@ -141,7 +125,7 @@ export default function App() {
             disabled={!canConvert}
             className="rounded bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white px-5 py-2.5 text-sm font-medium"
           >
-            {running ? 'Converting…' : 'Convert all'}
+            {running ? 'Converting…' : `Convert all to ${settings.outputFormat.toUpperCase()}`}
           </button>
           <span className="text-xs text-slate-500">
             {files.filter((f) => f.status === 'complete').length} of {files.length} complete

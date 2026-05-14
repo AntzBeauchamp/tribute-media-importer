@@ -12,12 +12,13 @@ export interface MediaMetadata {
   rotation: number;
 }
 
+export type OutputFormat = 'mp4' | 'mp3';
+
 export interface ConvertOptions {
   inputPath: string;
   outputDir: string;
   outputFilename: string;
-  trimStartSec?: number;
-  trimEndSec?: number;
+  format: OutputFormat;
 }
 
 export interface ConvertProgress {
@@ -29,8 +30,8 @@ export interface ConvertProgress {
 
 export interface AppSettings {
   outputFolder: string | null;
-  deceasedName: string;
   acknowledgedOwnership: boolean;
+  outputFormat: OutputFormat;
 }
 
 export type LinkKind = 'direct' | 'platform' | 'blocked';

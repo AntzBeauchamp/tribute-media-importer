@@ -8,10 +8,9 @@ function slugify(s: string): string {
     .slice(0, 80);
 }
 
-export function buildOutputFilename(deceasedName: string, originalFilename: string): string {
+export function buildOutputFilename(originalFilename: string, format: 'mp4' | 'mp3'): string {
   const base = originalFilename.replace(/\.[^./\\]+$/, '');
-  const slugOriginal = slugify(base) || 'video';
-  const slugName = slugify(deceasedName);
-  const prefix = slugName ? `${slugName}-` : '';
-  return `${prefix}${slugOriginal}-tribute-ready.mp4`;
+  const slug = slugify(base) || 'video';
+  const suffix = format === 'mp3' ? 'tribute-audio' : 'tribute-ready';
+  return `${slug}-${suffix}.${format}`;
 }
