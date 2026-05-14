@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import type { AppSettings } from '../types';
 
 export function useSettings() {
-  const [settings, setSettings] = useState<AppSettings>({ outputFolder: null, deceasedName: '' });
+  const [settings, setSettings] = useState<AppSettings>({ outputFolder: null, acknowledgedOwnership: false, outputFormat: 'mp4' });
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
