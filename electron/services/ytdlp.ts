@@ -53,7 +53,7 @@ export async function downloadWithYtDlp(
 
   const args = [
     url,
-    '-f', 'best[ext=mp4]/best[ext=webm]/best',
+    '-f', 'bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]/bv*+ba/b',
     '--ffmpeg-location', getFfmpegPath(),
     '--no-playlist',
     '--no-warnings',
