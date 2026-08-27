@@ -1,6 +1,6 @@
 {
   "name": "bf-downloader",
-  "version": "0.1.0",
+  "version": "0.1.3",
   "description": "Desktop app to import, download, convert, and prepare media files.",
   "main": "dist-electron/main.js",
   "author": "BF-Downloader",
